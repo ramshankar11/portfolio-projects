@@ -26,6 +26,15 @@ Focused on Infrastructure as Code (IaC), container orchestration, and multi-clou
 | **AWS Serverless API** | AWS SAM, Lambda, DynamoDB | Building highly available REST APIs. |
 | **Azure VM Config** | Bicep, Ansible | Hybrid infrastructure provisioning and configuration. |
 
+### 🤖 [Automations](./Automations)
+Focused on AI-driven workflows, social media automation, and productivity tools.
+
+| Project | Tech Stack | Description |
+|---------|------------|-------------|
+| **LinkedIn Post Automation** | Google Cloud Functions, Gemini AI, BigQuery | Automated content creation and publishing to LinkedIn. |
+| **ATS Resume Matcher** | Streamlit, Cloud Run, Gemini AI | AI-powered resume optimization for ATS compatibility. |
+| **X (Twitter) Post Automation** | Google Cloud Functions, Gemini AI, Tweepy | Trend-aware tweet generation and automated posting. |
+
 ## 🚀 Key Technologies
 - **Languages**: Python, SQL, Bash
 - **Cloud Providers**: Google Cloud Platform (GCP), AWS, Azure
