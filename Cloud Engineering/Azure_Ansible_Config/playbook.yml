@@ -1,0 +1,38 @@
+---
+- name: Configure Web Server
+  hosts: all
+  become: yes
+  vars:
+    http_port: 80
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - name: Install OpenSSL for Security
+      apt:
+        name: openssl
+        state: present
+
+    - name: Configure UFW Firewall (Allow HTTP)
+      ufw:
+        rule: allow
+        port: "{{ http_port }}"
+        proto: tcp
+
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Create Custom Homepage
+      copy:
+        content: "<h1>Deployed via Ansible on Azure!</h1>"
+        dest: /var/www/html/index.html
