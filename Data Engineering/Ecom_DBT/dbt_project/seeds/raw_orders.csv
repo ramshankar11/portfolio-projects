@@ -1,0 +1,6 @@
+id,user_id,order_date,status,amount
+101,1,2025-01-10,completed,50.00
+102,1,2025-02-05,completed,20.00
+103,2,2025-01-20,completed,100.00
+104,3,2025-03-01,returned,15.00
+105,2,2025-02-28,completed,45.50

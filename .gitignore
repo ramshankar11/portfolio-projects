@@ -1,0 +1,7 @@
+Resume_Ram_Shankar_2025_Latest.pdf
+*.pdf
+.DS_Store
+__pycache__/
+*.pyc
+.env
+.venv

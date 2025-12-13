@@ -1,0 +1,7 @@
+id,name,age,email
+1,Alice,30,alice@example.com
+2,Bob,150,bob@example.com
+3,,25,charlie@example.com
+4,David,40,not-an-email
+5,Eve,20,eve@example.com
+1,Frank,50,frank@example.com

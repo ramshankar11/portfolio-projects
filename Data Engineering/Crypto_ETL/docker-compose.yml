@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # The ETL Application
+  etl_app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=crypto_db
+      - DB_USER=user
+      - DB_PASSWORD=password
+      - DB_PORT=5432
+    volumes:
+      - .:/app
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=crypto_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

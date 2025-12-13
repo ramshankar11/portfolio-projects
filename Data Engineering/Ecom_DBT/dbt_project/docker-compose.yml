@@ -1,0 +1,20 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=dbt_user
+      - POSTGRES_PASSWORD=dbt_pass
+      - POSTGRES_DB=dbt_db
+    ports:
+      - "5432:5432"
+
+  dbt:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      - DBT_PROFILES_DIR=/usr/app/dbt
+    volumes:
+      - .:/usr/app/dbt
+    command: debug
