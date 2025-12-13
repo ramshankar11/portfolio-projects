@@ -2,7 +2,7 @@ import boto3
 import json
 import time
 
-ENDPOINT = "http://localhost:4566"
+ENDPOINT = "http://127.0.0.1:4566"
 s3 = boto3.client('s3', endpoint_url=ENDPOINT)
 
 def test_pipeline():

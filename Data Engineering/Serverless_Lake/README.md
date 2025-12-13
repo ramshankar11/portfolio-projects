@@ -20,9 +20,14 @@ This project simulates a Serverless Data Lake on AWS using LocalStack. It demons
    ```
 
 2. **Setup Infrastructure**:
-   (Requires `boto3` installed: `pip install boto3`)
+   (Requires `boto3` installed: `pip install -r requirements.txt`)
    ```bash
    cd scripts
+   # Set dummy credentials for LocalStack
+   export AWS_ACCESS_KEY_ID=test
+   export AWS_SECRET_ACCESS_KEY=test
+   export AWS_DEFAULT_REGION=us-east-1
+   
    python setup.py
    ```
    This script creates the buckets, packages the Lambda, deploys it, and configures the S3 trigger.
@@ -31,6 +36,7 @@ This project simulates a Serverless Data Lake on AWS using LocalStack. It demons
    ```bash
    python test_pipeline.py
    ```
+   *(Ensure environment variables are set as above)*
    You should see the processed JSON output with a `processed_at` timestamp.
 
 ## Technologies

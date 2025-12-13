@@ -17,15 +17,16 @@ def validate_data():
     # Convert to GX Dataset (older API) or Validator (newer API)
     # Using 'from_dataset' for simplicity in scripts without full config setup
     batch_name = "users_batch"
-    datasource = context.sources.add_pandas(datasource_name)
-    asset = datasource.add_dataframe_asset(name=batch_name, dataframe=df)
+    datasource = context.data_sources.add_pandas(datasource_name)
+    asset = datasource.add_dataframe_asset(name=batch_name)
     
     # Define Expectation Suite
     suite_name = "user_validation_suite"
-    context.add_or_update_expectation_suite(expectation_suite_name=suite_name)
+    suite = gx.ExpectationSuite(name=suite_name)
+    context.suites.add_or_update(suite)
     
     # Build Batch Request
-    batch_request = asset.build_batch_request()
+    batch_request = asset.build_batch_request(options={"dataframe": df})
     validator = context.get_validator(
         batch_request=batch_request,
         expectation_suite_name=suite_name
@@ -57,7 +58,7 @@ def validate_data():
         print("\nFailures detected:")
         for res in results["results"]:
             if not res["success"]:
-                print(f"- {res['expectation_config']['expectation_type']} failed on column {res['expectation_config']['kwargs'].get('column')}")
+                print(f"- {res['expectation_config'].type} failed on column {res['expectation_config'].kwargs.get('column')}")
                 print(f"  Unexpected count: {res['result']['unexpected_count']}")
                 print(f"  Partial unexpected list: {res['result']['partial_unexpected_list']}")
 

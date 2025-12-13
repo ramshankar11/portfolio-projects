@@ -33,14 +33,13 @@ A scalable streaming architecture that generates high-volume web server logs, bu
    - You will see **ALERTS** in the `consumer` container output when errors are generated.
 
    ```text
-   producer_1  | Sent: GET /home 200
-   consumer_1  | Processed: 2025-12-13T10:00:00
-   producer_1  | Sent: POST /login 401
-   consumer_1  | ALERT: Suspicious detected! IP=192.168.1.5 Status=401 Path=/login
+   producer-1  | INFO:__main__:Sent: GET /home 200
+   producer-1  | INFO:__main__:Sent: POST /login 401
+   consumer-1  | WARNING:__main__:ALERT: Suspicious detected! IP=192.168.1.5 Status=401 Path=/login
    ```
 
 ## Technologies
 - **Python**
-- **Apache Kafka**: Event Streaming
-- **Docker**: Orchestration
+- **Apache Kafka**: Event Streaming (Confluent Platform)
+- **Docker**: Orchestration (using `cp-zookeeper` and `cp-kafka` images)
 - **Faker**: Synthetic Data Generation

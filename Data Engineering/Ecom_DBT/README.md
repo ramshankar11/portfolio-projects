@@ -12,6 +12,7 @@ This project demonstrates a modern data transformation workflow using **dbt (dat
 1. **Start Database**:
    ```bash
    cd dbt_project
+   docker-compose build  # Build the dbt image first
    docker-compose up -d postgres
    ```
 
@@ -37,6 +38,7 @@ This project demonstrates a modern data transformation workflow using **dbt (dat
    ```bash
    docker-compose run dbt test
    ```
+   *(Note: Currently, no tests are defined in the project, so this will simply check for test definitions)*
 
 3. **Generate Documentation**:
    ```bash

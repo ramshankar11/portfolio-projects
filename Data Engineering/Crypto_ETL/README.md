@@ -20,7 +20,7 @@ A Python-based ETL pipeline that fetches daily cryptocurrency data, calculates m
 
 2. **Start the pipeline**:
    ```bash
-   docker-compose up --build
+   docker-compose up --build  ( -d to run it in background and keep the container running )
    ```
    This will:
    - Start a PostgreSQL container.
