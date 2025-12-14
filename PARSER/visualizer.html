@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COBOL Deep Visualizer</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: rgba(30, 41, 59, 0.6);
+            --panel-border: rgba(148, 163, 184, 0.1);
+            --accent-primary: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success-color: #4ade80;
+            --warning-color: #facc15;
+            --danger-color: #f87171;
+            --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            --code-font: 'JetBrains Mono', 'Menlo', monospace;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            height: 100vh;
+            overflow: hidden;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+        }
+
+        #app {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .nav-section {
+            margin-bottom: 2rem;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            opacity: 0.8;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            border: 1px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(56, 189, 248, 0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-primary);
+            border-color: rgba(56, 189, 248, 0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--panel-border);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 5;
+        }
+
+        .btn-upload {
+            background: var(--accent-primary);
+            color: #0f172a;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-upload:hover {
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        .content-area {
+            position: relative;
+            overflow: auto;
+            /* Allow scrolling for list view */
+            background: radial-gradient(circle at center, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.8) 100%);
+            padding: 2rem;
+        }
+
+        /* --- LIST VIEW STYLES --- */
+        #list-view {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .paragraph-block {
+            margin-bottom: 2rem;
+        }
+
+        .paragraph-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .ast-node {
+            margin-left: 1.5rem;
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--panel-border);
+            position: relative;
+            margin-bottom: 0.75rem;
+            transition: border-color 0.2s;
+        }
+
+        .ast-node:last-child {
+            border-left-color: transparent;
+            border-image: linear-gradient(to bottom, var(--panel-border) 14px, transparent 14px) 1 100%;
+        }
+
+        .ast-node::before {
+            content: "";
+            position: absolute;
+            left: -2px;
+            top: 20px;
+            width: 1.5rem;
+            height: 2px;
+            background: var(--panel-border);
+            transition: background 0.2s;
+        }
+
+        .ast-node:hover::before {
+            background: var(--accent-primary);
+        }
+
+        .ast-node:hover {
+            border-left-color: var(--accent-primary);
+        }
+
+        .node-content {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .node-content:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-primary);
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .node-type {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .node-details-text {
+            font-family: var(--code-font);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Node Colors */
+        .type-IF {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .type-PERFORM {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+        }
+
+        .type-MOVE {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--success-color);
+        }
+
+        .type-CALL {
+            background: rgba(251, 146, 60, 0.15);
+            color: #fdba74;
+        }
+
+        .type-GOTO {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--danger-color);
+        }
+
+        .type-STATEMENT {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .nested-container {
+            margin-top: 0.5rem;
+        }
+
+        .branch-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin: 0.5rem 0 0.5rem 1.5rem;
+            padding-left: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        /* --- GRAPH VIEW (D3) STYLES --- */
+        #d3-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #d3-container svg {
+            cursor: move;
+        }
+
+        .node circle {
+            fill: #0f172a;
+            stroke-width: 2px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .node circle:hover {
+            filter: url(#glow);
+            r: 8px;
+        }
+
+        .node text {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            fill: #e2e8f0;
+            pointer-events: none;
+            paint-order: stroke;
+            stroke: #0f172a;
+            stroke-width: 4px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .link {
+            fill: none;
+            stroke: rgba(148, 163, 184, 0.15);
+            stroke-width: 1.5px;
+            transition: stroke 0.3s;
+        }
+
+        .node:hover .link {
+            stroke: rgba(56, 189, 248, 0.5);
+        }
+
+        /* Modals and Overlays */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            width: 600px;
+            max-width: 90vw;
+            max-height: 80vh;
+            background: #1e293b;
+            border: 1px solid var(--panel-border);
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-block {
+            background: #0f172a;
+            padding: 1rem;
+            margin: 1.5rem;
+            border-radius: 0.5rem;
+            font-family: var(--code-font);
+            font-size: 0.9rem;
+            color: #d4d4d4;
+            white-space: pre-wrap;
+            border: 1px solid var(--panel-border);
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        /* Upload Screen */
+        .upload-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-color);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upload-box {
+            width: 400px;
+            height: 250px;
+            border: 2px dashed var(--panel-border);
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-secondary);
+        }
+
+        .upload-box:hover {
+            border-color: var(--accent-primary);
+            background: rgba(56, 189, 248, 0.05);
+            color: var(--text-primary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .color-If {
+            stroke: var(--accent-primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Upload UI -->
+    <div id="upload-screen" class="upload-overlay">
+        <div style="text-align:center; margin-bottom: 2rem;">
+            <h1
+                style="font-size:2.5rem; margin-bottom:0.5rem; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                COBOL Visualizer</h1>
+            <p style="color:var(--text-secondary);">Interactive Flow & AST Explorer</p>
+        </div>
+
+        <label class="upload-box" id="drop-zone">
+            <i data-lucide="upload-cloud" size="48"></i>
+            <div style="margin-top:1rem; font-weight:600;">Upload Source Code</div>
+            <div style="font-size:0.8rem; opacity:0.7;">.txt, .cbl, .cob</div>
+            <input type="file" id="file-input" accept=".txt,.cbl,.cob" style="display:none">
+        </label>
+
+        <div id="loading" style="display:none; flex-direction:column; align-items:center; gap:1rem;">
+            <div class="spinner"></div>
+            <div style="color:var(--accent-primary);">Analyzing Structure...</div>
+        </div>
+    </div>
+
+    <div id="app" style="filter:blur(0px); transition:filter 0.5s;">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="brand">
+                <i data-lucide="layers"></i>
+                Visualizer
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">View Mode</div>
+                <div class="nav-item active" id="btn-view-list" onclick="switchView('list')">
+                    <i data-lucide="list" size="18"></i> Flow View
+                </div>
+                <div class="nav-item" id="btn-view-graph" onclick="switchView('graph')">
+                    <i data-lucide="git-branch" size="18"></i> Graph View
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">Paragraphs</div>
+                <div id="paragraph-nav"
+                    style="display:flex; flex-direction:column; gap:0.25rem; max-height:400px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <div style="font-weight:700; color:var(--text-primary); display:flex; gap:0.5rem;">
+                        <span id="view-title">Procedure Flow</span>
+                    </div>
+                    <div class="file-info" id="file-meta"
+                        style="font-size:0.8rem; color:var(--accent-primary); border:1px solid rgba(56,189,248,0.3); padding:0.2rem 0.6rem; border-radius:1rem;">
+                        -</div>
+                </div>
+                <button class="btn-upload" onclick="resetUpload()">
+                    <i data-lucide="upload" size="16"></i> New File
+                </button>
+            </div>
+
+            <div class="content-area">
+                <!-- List View -->
+                <div id="list-view"></div>
+                <!-- Graph View -->
+                <div id="d3-container" style="display:none; width:100%; height:100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="detail-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modal-title" style="font-weight:600; color:var(--text-primary);">Details
+                </div>
+                <i data-lucide="x" style="cursor:pointer; color:var(--text-secondary);" onclick="closeModal()"></i>
+            </div>
+            <div class="code-block" id="modal-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let PARSED_DATA = null;
+        let currentView = 'list';
+
+        // --- Init ---
+        lucide.createIcons();
+        const fileInput = document.getElementById('file-input');
+        const uploadScreen = document.getElementById('upload-screen');
+        const loading = document.getElementById('loading');
+        const dropZone = document.getElementById('drop-zone');
+
+        fileInput.addEventListener('change', handleFile);
+
+        function resetUpload() {
+            uploadScreen.style.display = 'flex';
+            document.getElementById('app').style.filter = 'blur(10px)';
+            dropZone.style.display = 'flex';
+            loading.style.display = 'none';
+
+            // Clear data
+            document.getElementById('list-view').innerHTML = '';
+            d3.select("#d3-container").selectAll("*").remove();
+        }
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            dropZone.style.display = 'none';
+            loading.style.display = 'flex';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Absolute URL for robustness
+            fetch('http://localhost:8000/parse', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    PARSED_DATA = data;
+                    document.getElementById('file-meta').textContent = file.name;
+                    uploadScreen.style.display = 'none';
+                    document.getElementById('app').style.filter = 'blur(0px)';
+
+                    // Render Both
+                    renderListView();
+                    initD3(); // Lazy init essentially
+                    updateParagraphsNav();
+
+                    // Ensure List is active
+                    switchView('list');
+                })
+                .catch(err => {
+                    alert("Error: " + err);
+                    resetUpload();
+                });
+        }
+
+        // --- View Switching ---
+        function switchView(mode) {
+            currentView = mode;
+            const listBtn = document.getElementById('btn-view-list');
+            const graphBtn = document.getElementById('btn-view-graph');
+            const listDiv = document.getElementById('list-view');
+            const graphDiv = document.getElementById('d3-container');
+            const contentArea = document.querySelector('.content-area');
+
+            if (mode === 'list') {
+                listBtn.classList.add('active');
+                graphBtn.classList.remove('active');
+                listDiv.style.display = 'block';
+                graphDiv.style.display = 'none';
+                contentArea.style.overflow = 'auto'; // Scrollable for list
+                document.getElementById('view-title').textContent = "Procedure Flow";
+            } else {
+                listBtn.classList.remove('active');
+                graphBtn.classList.add('active');
+                listDiv.style.display = 'none';
+                graphDiv.style.display = 'block';
+                contentArea.style.overflow = 'hidden'; // Fixed for Canvas/SVG
+                document.getElementById('view-title').textContent = "Graphical Tree";
+            }
+        }
+
+        // --- List View Logic ---
+        function renderListView() {
+            const container = document.getElementById('list-view');
+            container.innerHTML = '';
+
+            if (!PARSED_DATA.procedure_division) return;
+
+            Object.entries(PARSED_DATA.procedure_division).forEach(([paraName, stmts]) => {
+                const block = document.createElement('div');
+                block.className = 'paragraph-block';
+                block.id = `para-${paraName}`;
+                block.innerHTML = `<div class="paragraph-title"><i data-lucide="bookmark" size="14"></i> ${paraName}</div>`;
+
+                stmts.forEach(s => block.appendChild(renderStmt(s)));
+                container.appendChild(block);
+            });
+
+            lucide.createIcons();
+        }
+
+        function renderStmt(stmt) {
+            const container = document.createElement('div');
+            container.className = 'ast-node';
+
+            const content = document.createElement('div');
+            content.className = 'node-content';
+
+            let iconName = 'activity';
+            if (stmt.type === 'IF') iconName = 'git-branch';
+            if (stmt.type === 'PERFORM') iconName = 'repeat';
+            if (stmt.type === 'MOVE') iconName = 'arrow-right';
+            if (stmt.type === 'CALL') iconName = 'phone-call';
+            if (stmt.type === 'GO TO') iconName = 'fast-forward';
+
+            let mainText = '';
+            if (stmt.type === 'IF') mainText = `IF ${stmt.condition}`;
+            else if (stmt.type === 'PERFORM') mainText = `PERFORM ${stmt.details}`;
+            else if (stmt.type === 'MOVE') mainText = stmt.statement;
+            else if (stmt.type === 'CALL') mainText = `CALL ${stmt.target}`;
+            else if (stmt.type === 'GO TO') mainText = `GO TO ${stmt.target}`;
+            else mainText = `${stmt.verb} ${stmt.tokens ? stmt.tokens.join(' ') : ''}`;
+
+            content.innerHTML = `
+            <div class="node-type type-${stmt.type.replace(' ', '')}">${stmt.type}</div>
+            <i data-lucide="${iconName}" size="14" style="color:var(--text-secondary)"></i>
+            <div class="node-details-text">${mainText}</div>
+        `;
+
+            content.onclick = (e) => {
+                e.stopPropagation();
+                openModal(stmt);
+            };
+
+            container.appendChild(content);
+
+            // Nested Rendering
+            if (stmt.type === 'IF') {
+                if (stmt.then && stmt.then.length) {
+                    const label = document.createElement('div');
+                    label.className = 'branch-label';
+                    label.style.color = 'var(--success-color)';
+                    label.innerText = "Then";
+                    container.appendChild(label);
+
+                    const nested = document.createElement('div');
+                    nested.className = 'nested-container';
+                    stmt.then.forEach(s => nested.appendChild(renderStmt(s)));
+                    container.appendChild(nested);
+                }
+                if (stmt.else && stmt.else.length) {
+                    const label = document.createElement('div');
+                    label.className = 'branch-label';
+                    label.style.color = 'var(--danger-color)';
+                    label.innerText = "Else";
+                    container.appendChild(label);
+
+                    const nested = document.createElement('div');
+                    nested.className = 'nested-container';
+                    stmt.else.forEach(s => nested.appendChild(renderStmt(s)));
+                    container.appendChild(nested);
+                }
+            }
+            else if (stmt.type === 'PERFORM' && stmt.body && stmt.body.length) {
+                const nested = document.createElement('div');
+                nested.className = 'nested-container';
+                stmt.body.forEach(s => nested.appendChild(renderStmt(s)));
+                container.appendChild(nested);
+            }
+            else if (stmt.type === 'EVALUATE' && stmt.cases) {
+                const nested = document.createElement('div');
+                nested.className = 'nested-container';
+                stmt.cases.forEach(c => {
+                    const label = document.createElement('div');
+                    label.className = 'branch-label';
+                    label.style.color = 'var(--warning-color)';
+                    label.innerHTML = `When ${c.condition}`;
+                    nested.appendChild(label);
+                    c.statements.forEach(s => nested.appendChild(renderStmt(s)));
+                });
+                container.appendChild(nested);
+            }
+
+            return container;
+        }
+
+        // --- D3 Logic (Graph View) ---
+        // (Preserving exact logic from previous step)
+        let root = null, svg = null, g = null, treemap = null, i = 0, duration = 500;
+
+        function initD3() {
+            if (!PARSED_DATA) return;
+            const container = document.getElementById('d3-container');
+            // Need specific dimensions or it collapses if hidden
+            const width = container.clientWidth || 800;
+            const height = container.clientHeight || 800;
+
+            d3.select("#d3-container").selectAll("*").remove();
+
+            svg = d3.select("#d3-container").append("svg")
+                .attr("width", "100%")
+                .attr("height", "100%")
+                .call(d3.zoom().scaleExtent([0.1, 3]).on("zoom", (e) => {
+                    g.attr("transform", e.transform);
+                }))
+                .on("dblclick.zoom", null);
+
+            // Glow Filter
+            const defs = svg.append("defs");
+            const filter = defs.append("filter").attr("id", "glow");
+            filter.append("feGaussianBlur").attr("stdDeviation", "2.5").attr("result", "coloredBlur");
+            const feMerge = filter.append("feMerge");
+            feMerge.append("feMergeNode").attr("in", "coloredBlur");
+            feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+            g = svg.append("g")
+                .attr("transform", "translate(100, " + height / 2 + ")");
+
+            const treeData = transformToHierarchy(PARSED_DATA.procedure_division);
+            root = d3.hierarchy(treeData, d => d.children);
+
+            if (root.children) root.children.forEach(collapse);
+            root.x0 = height / 2;
+            root.y0 = 0;
+
+            treemap = d3.tree().nodeSize([60, 280]);
+            update(root);
+        }
+
+        function transformToHierarchy(procData) {
+            const children = Object.entries(procData).map(([paraName, stmts]) => {
+                return {
+                    name: paraName, type: 'PARAGRAPH', children: stmts.map(s => mapD3Statement(s))
+                };
+            });
+            return { name: "Procedure Division", type: "ROOT", children: children };
+        }
+
+        function mapD3Statement(stmt) {
+            const node = { name: stmt.type, type: stmt.type, data: stmt, children: [] };
+            if (stmt.type === 'IF') node.details = stmt.condition;
+            else if (stmt.type === 'PERFORM') node.details = stmt.details;
+            else if (stmt.type === 'MOVE') node.details = stmt.statement;
+            else if (stmt.type === 'CALL') node.details = stmt.target;
+            else if (stmt.type === 'GO TO') node.details = stmt.target;
+            else node.details = stmt.verb;
+
+            if (stmt.type === 'IF') {
+                if (stmt.then && stmt.then.length) node.children.push({ name: "THEN", type: "BRANCH_TRUE", children: stmt.then.map(mapD3Statement) });
+                if (stmt.else && stmt.else.length) node.children.push({ name: "ELSE", type: "BRANCH_FALSE", children: stmt.else.map(mapD3Statement) });
+            } else if (stmt.type === 'PERFORM' && stmt.body) {
+                stmt.body.forEach(s => node.children.push(mapD3Statement(s)));
+            } else if (stmt.type === 'EVALUATE' && stmt.cases) {
+                stmt.cases.forEach(c => node.children.push({ name: "WHEN " + c.condition, type: "Branch", children: c.statements.map(mapD3Statement) }));
+            }
+            if (node.children.length === 0) delete node.children;
+            return node;
+        }
+
+        function collapse(d) {
+            if (d.children) {
+                d._children = d.children;
+                d._children.forEach(collapse);
+                d.children = null;
+            }
+        }
+
+        function update(source) {
+            const treeData = treemap(root);
+            const nodes = treeData.descendants();
+            const links = treeData.links();
+            nodes.forEach(d => { d.y = d.depth * 280; });
+
+            const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++i));
+            const nodeEnter = node.enter().append('g')
+                .attr('class', d => 'node node-' + d.data.type)
+                .attr("transform", d => "translate(" + source.y0 + "," + source.x0 + ")")
+                .on('click', click);
+
+            nodeEnter.append('circle')
+                .attr('r', 1e-6)
+                .style("fill", d => d._children ? "#38bdf8" : "#1e293b");
+
+            nodeEnter.append('text')
+                .attr("dy", ".35em")
+                .attr("x", d => d.children || d._children ? -15 : 15)
+                .attr("text-anchor", d => d.children || d._children ? "end" : "start")
+                .text(d => {
+                    let t = d.data.name;
+                    if (d.data.details) {
+                        const limit = 30;
+                        if (d.data.details.length > limit) t += " (" + d.data.details.substring(0, limit) + "...)";
+                        else t += " " + d.data.details;
+                    }
+                    return t;
+                })
+                .style("fill-opacity", 1e-6)
+                .on('click', (e, d) => {
+                    e.stopPropagation();
+                    if (d.data.data) openModal(d.data.data);
+                });
+
+            const nodeUpdate = node.merge(nodeEnter).transition().duration(duration)
+                .attr("transform", d => "translate(" + d.y + "," + d.x + ")");
+            nodeUpdate.select('circle').attr('r', 6).style("fill", d => d._children ? "#38bdf8" : "#1e293b");
+            nodeUpdate.select('text').style("fill-opacity", 1);
+
+            const nodeExit = node.exit().transition().duration(duration)
+                .attr("transform", d => "translate(" + source.y + "," + source.x + ")").remove();
+            nodeExit.select('circle').attr('r', 1e-6);
+            nodeExit.select('text').style("fill-opacity", 1e-6);
+
+            const link = g.selectAll('path.link').data(links, d => d.target.id);
+            const linkEnter = link.enter().insert('path', "g").attr("class", "link")
+                .attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+            const linkUpdate = link.merge(linkEnter).transition().duration(duration)
+                .attr('d', d => diagonal(d.source, d.target));
+            link.exit().transition().duration(duration)
+                .attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+            nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+        }
+
+        function diagonal(s, d) {
+            return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`;
+        }
+
+        function click(e, d) {
+            if (d.children) { d._children = d.children; d.children = null; }
+            else { d.children = d._children; d._children = null; }
+            update(d);
+        }
+
+        // --- Common Logic ---
+        function updateParagraphsNav() {
+            const nav = document.getElementById('paragraph-nav');
+            nav.innerHTML = '';
+            if (PARSED_DATA.procedure_division) {
+                Object.keys(PARSED_DATA.procedure_division).forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'nav-item';
+                    item.innerHTML = `<i data-lucide="hash" size="14"></i> ${p}`;
+                    item.onclick = () => {
+                        if (currentView === 'list') {
+                            document.getElementById('para-' + p).scrollIntoView({ behavior: 'smooth' });
+                        }
+                        // Future: Support D3 centering
+                    };
+                    nav.appendChild(item);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function openModal(data) {
+            document.getElementById('detail-modal').classList.add('active');
+            document.getElementById('modal-title').textContent = data.type || "Details";
+            document.getElementById('modal-content').textContent = JSON.stringify(data, (k, v) => {
+                if (k === 'children' || k === 'parent') return undefined;
+                return v;
+            }, 2);
+        }
+        function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
+        document.getElementById('detail-modal').onclick = (e) => { if (e.target.id === 'detail-modal') closeModal(); };
+
+        resetUpload();
+    </script>
+</body>
+
+</html>
