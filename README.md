@@ -14,6 +14,7 @@ Focused on building robust data pipelines, real-time streaming, warehousing, and
 | **Data Warehousing** | dbt, SQL, Postgres | Analytics engineering and layered dimensional modeling. |
 | **Serverless Data Lake** | AWS Lambda, S3, LocalStack | Event-triggered file processing pipeline. |
 | **Data Quality** | Great Expectations | Automated schema validation and defensive coding. |
+| **Data Cleansing** | Python, WebAssembly, Pyodide | Instant data cleansing app running in your browser. |
 
 ### ☁️ [Cloud Engineering](./Cloud%20Engineering)
 Focused on Infrastructure as Code (IaC), container orchestration, and multi-cloud serverless architectures.

@@ -1,0 +1,635 @@
+:root {
+    --bg-void: #050505;
+    --bg-panel: #111111;
+    --neon-cyan: #00f3ff;
+    --neon-green: #0aff68;
+    --neon-red: #ff003c;
+    --text-main: #ffffff;
+    --text-dim: #888888;
+    --border-dim: #333333;
+    --font-tech: 'Space Grotesk', monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-void);
+    color: var(--text-main);
+    font-family: var(--font-tech);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Background FX */
+.bg-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(var(--border-dim) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.08;
+    z-index: -2;
+    pointer-events: none;
+}
+
+.bg-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 80vw;
+    height: 80vw;
+    background: radial-gradient(circle, rgba(0, 243, 255, 0.03) 0%, transparent 60%);
+    transform: translate(-50%, -50%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Header */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 40px;
+    height: 80px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brand {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+}
+
+.brand ion-icon {
+    color: var(--neon-cyan);
+}
+
+.system-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    border: 1px solid var(--border-dim);
+    padding: 8px 16px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #555;
+    transition: 0.3s;
+}
+
+.status-dot.green {
+    background: var(--neon-green);
+    box-shadow: 0 0 8px var(--neon-green);
+}
+
+.status-dot.red {
+    background: var(--neon-red);
+}
+
+/* Workspace */
+.workspace {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Vertically center the Viewport */
+    padding-bottom: 100px;
+    /* Space for Dock */
+}
+
+.viewport {
+    width: 90%;
+    max-width: 1100px;
+    height: 65vh;
+    /* Fixed height for consistency */
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.02);
+    /* subtle frame hint */
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.98);
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    justify-content: center;
+    /* Center content horizontally */
+    align-items: center;
+    /* Center content vertically */
+    padding: 20px;
+}
+
+.view.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+}
+
+/* PORTAL VIEW ALIGNMENT */
+#view-source {
+    flex-direction: column;
+    /* Stack stats below portal if needed, though we hide logic */
+}
+
+.portal-container {
+    /* No absolute centering here, flex handles it */
+    width: 350px;
+    height: 350px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: 0.3s;
+    border: 1px solid transparent;
+    /* stability */
+}
+
+.portal-ring {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 1px dashed var(--border-dim);
+    animation: rotate 30s linear infinite;
+    z-index: 0;
+}
+
+.portal-core {
+    width: 120px;
+    height: 120px;
+    background: rgba(0, 243, 255, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--neon-cyan);
+    box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+    transition: 0.3s;
+    z-index: 1;
+}
+
+.portal-core ion-icon {
+    font-size: 3.5rem;
+    color: var(--neon-cyan);
+}
+
+.portal-label {
+    margin-top: 40px;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    color: var(--neon-cyan);
+    font-weight: 700;
+    z-index: 1;
+}
+
+.portal-sub {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+    letter-spacing: 1px;
+    z-index: 1;
+}
+
+.portal-container:hover .portal-core {
+    transform: scale(1.05);
+    background: rgba(0, 243, 255, 0.1);
+    box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* FILE INFO CARD (Centered) */
+.holo-card {
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--border-dim);
+    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    padding: 30px;
+    width: 100%;
+    max-width: 650px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.4s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+/* TRANSFORM GRID ALIGNMENT */
+#view-transform {
+    align-items: stretch;
+    /* Fill height */
+}
+
+.transform-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 25px;
+    width: 100%;
+    height: 100%;
+}
+
+.holo-panel {
+    background: rgba(17, 17, 17, 0.9);
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* Fill Grid Cell */
+}
+
+.panel-header {
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    border-bottom: 1px solid #222;
+    padding-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    /* Single column stats */
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.tool-btn {
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    padding: 15px 20px;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    transition: 0.2s;
+    height: 50px;
+}
+
+.tool-btn:hover {
+    border-color: var(--neon-cyan);
+    background: rgba(0, 243, 255, 0.05);
+    color: var(--neon-cyan);
+    transform: translateX(5px);
+}
+
+.tool-btn span {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+.pipeline-stack {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pipeline-stack li {
+    background: #080808;
+    border: 1px solid #222;
+    padding: 15px 20px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 2px solid var(--neon-cyan);
+}
+
+/* TERMINAL ALIGNMENT */
+.terminal-container {
+    width: 100%;
+    height: 100%;
+    background: #030303;
+    border: 1px solid #222;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-screen {
+    flex: 1;
+    padding: 30px;
+    color: var(--neon-green);
+    font-family: monospace;
+    font-size: 0.9rem;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.control-deck {
+    padding: 25px;
+    border-top: 1px solid #222;
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    background: #080808;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+}
+
+.cyber-btn {
+    padding: 12px 35px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: var(--font-tech);
+    border-radius: 2px;
+    transition: 0.2s;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cyber-btn.primary {
+    background: var(--neon-cyan);
+    color: black;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
+}
+
+.cyber-btn.primary:hover {
+    background: #fff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+}
+
+.cyber-btn.warning {
+    background: transparent;
+    border: 1px solid var(--neon-red);
+    color: var(--neon-red);
+}
+
+.cyber-btn.warning:hover {
+    background: var(--neon-red);
+    color: black;
+}
+
+.cyber-btn.success {
+    background: var(--neon-green);
+    color: black;
+    box-shadow: 0 0 15px rgba(10, 255, 104, 0.2);
+}
+
+/* DOCK ALIGNMENT */
+.dock-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.dock {
+    display: flex;
+    gap: 20px;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(15px);
+    padding: 12px 25px;
+    /* Tighter padding */
+    border-radius: 20px;
+    border: 1px solid #333;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+.dock-item {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 1.4rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dock-item:hover {
+    color: white;
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dock-item.active {
+    background: rgba(0, 243, 255, 0.1);
+    border: 1px solid rgba(0, 243, 255, 0.3);
+    color: var(--neon-cyan);
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+    transform: translateY(-8px);
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-dim);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    color: var(--neon-cyan);
+    letter-spacing: 2px;
+    font-size: 0.9rem;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+}
+
+.mono {
+    font-family: monospace;
+    color: white;
+}
+
+.mono-table {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    overflow-x: auto;
+    max-height: 200px;
+}
+
+.mono-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mono-table td,
+.mono-table th {
+    padding: 8px;
+    border: 1px solid #333;
+    text-align: left;
+}
+
+.mono-table th {
+    color: var(--neon-cyan);
+    position: sticky;
+    top: 0;
+    background: #111;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === MOBILE RESPONSIVENESS === */
+@media (max-width: 768px) {
+
+    /* Adjust Header */
+    .top-bar {
+        padding: 15px 20px;
+        height: 60px;
+    }
+
+    .brand {
+        font-size: 1rem;
+    }
+
+    .system-status {
+        padding: 4px 10px;
+        font-size: 0.65rem;
+    }
+
+    /* Adjust Viewport */
+    .viewport {
+        width: 100%;
+        height: auto;
+        min-height: 70vh;
+        border: none;
+        background: transparent;
+    }
+
+    .view {
+        position: relative;
+        opacity: 1;
+        pointer-events: all;
+        transform: scale(1);
+        display: none;
+        /* Use Display toggle for mobile to handle flow */
+        padding: 10px;
+    }
+
+    .view.active {
+        display: flex;
+    }
+
+    /* Stack Transform Grid */
+    .transform-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        gap: 15px;
+    }
+
+    .holo-panel {
+        height: auto;
+        min-height: 300px;
+    }
+
+    /* Resize Portal */
+    .portal-container {
+        width: 280px;
+        height: 280px;
+    }
+
+    .portal-ring {
+        width: 240px;
+        height: 240px;
+    }
+
+    .portal-core {
+        width: 90px;
+        height: 90px;
+    }
+
+    .portal-core ion-icon {
+        font-size: 2.5rem;
+    }
+
+    /* Control Deck Stacking */
+    .control-deck {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .cyber-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Dock Adjustment */
+    .dock-container {
+        bottom: 10px;
+        width: 90%;
+    }
+
+    .dock {
+        width: 100%;
+        justify-content: space-around;
+        padding: 10px;
+    }
+}
