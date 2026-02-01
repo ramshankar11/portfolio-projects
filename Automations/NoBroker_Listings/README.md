@@ -34,7 +34,7 @@ The script uses environment variables for configuration. You must set these befo
 | Variable | Description | Required |
 | :--- | :--- | :--- |
 | `TELEGRAM_BOT_TOKEN` | Your Telegram Bot Token. | Yes |
-| `TELEGRAM_CHAT_ID` | The Chat ID to receive notifications. | Yes | you can get it from https://api.telegram.org/bot{bot_token}/getUpdates -> you can check the chat id in from key in the resulting json
+| `TELEGRAM_CHAT_ID` | The Chat ID to receive notifications. | Yes | 
 | `GCS_BUCKET_NAME` | Google Cloud Storage bucket name for state. | No (Default: `nobroker`) |
 
 ### Setting Environment Variables (Windows PowerShell)
@@ -43,7 +43,7 @@ The script uses environment variables for configuration. You must set these befo
 $env:TELEGRAM_BOT_TOKEN="your_bot_token_here"
 $env:TELEGRAM_CHAT_ID="your_chat_id_here"
 ```
-
+you can get chatid from https://api.telegram.org/bot{bot_token}/getUpdates -> you can check the chat id in from key in the resulting json
 ## Usage
 
 ### Local Execution
